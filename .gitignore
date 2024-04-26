@@ -1,1 +1,2 @@
-/.env
+.env
+import_errors.log

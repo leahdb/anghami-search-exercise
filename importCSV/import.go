@@ -1,4 +1,4 @@
-package main
+package importCSV
 
 import (
 	"database/sql"
@@ -40,58 +40,25 @@ func (r *CustomCSVReader) Read() ([]string, error) {
 }
 
 
-// func main() {
-// 	// MySQL connection parameters
-// 	dbUser := "lea"
-// 	dbPass := "leapassword"
-// 	dbName := "default"
-// 	dbHost := "localhost"
-// 	dbPort := "3307"
+func ImportDataFromCSV(db *sql.DB, fileName, tableName string) error {
+    fmt.Printf("Importing %s ...\n", tableName)
+	file, err := os.Open(fileName)
+	if err != nil {
+		return fmt.Errorf("error opening %s CSV file: %v", fileName, err)
+	}
+	defer file.Close()
 
-// 	// Connect to MySQL database
-// 	db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", dbUser, dbPass, dbHost, dbPort, dbName))
-// 	if err != nil {
-// 		log.Fatalf("Error connecting to MySQL: %v", err)
-// 	}
-// 	defer db.Close()
+	reader := NewCustomCSVReader(file)
+	if err != nil {
+		return fmt.Errorf("error creating custom CSV reader: %v", err)
+	}
 
-// 	if err := createTables(db); err != nil {
-// 		log.Fatalf("Error creating tables: %v", err)
-// 	}
-
-// 	// Import data from books.csv
-// 	booksFile, err := os.Open("books.csv")
-// 	if err != nil {
-// 		log.Fatalf("Error opening books CSV file: %v", err)
-// 	}
-// 	defer booksFile.Close()
-
-// 	booksReader := NewCustomCSVReader(booksFile)
-// 	importData(db, booksReader, "books")
-// 	if err != nil {
-// 		log.Fatalf("Error importing data from books CSV: %v", err)
-// 	}
-
-// 	// Import data from movies.csv
-// 	moviesFile, err := os.Open("movies.csv")
-// 	if err != nil {
-// 		log.Fatalf("Error opening movies CSV file: %v", err)
-// 	}
-// 	defer moviesFile.Close()
-
-// 	moviesReader := NewCustomCSVReader(moviesFile)
-// 	importData(db, moviesReader, "movies")
-// 	if err != nil {
-// 		log.Fatalf("Error importing data from movies CSV: %v", err)
-// 	}
-
-// 	fmt.Println("Data import successful!")
-
-// }
+	return importData(db, reader, tableName)
+}
 
 
 // createTables creates tables in the database if they don't already exist
-func createTables(db *sql.DB) error {
+func CreateTables(db *sql.DB) error {
 	// Table creation statements
 	tables := map[string]string{
 		"movies": "",
