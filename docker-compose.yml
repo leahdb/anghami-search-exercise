@@ -1,0 +1,19 @@
+version: '3.7'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: anghami-exercice-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: leapassword
+      MYSQL_DATABASE: default
+      MYSQL_USER: lea
+      MYSQL_PASSWORD: leapassword
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+volumes:
+  mysql_data:
