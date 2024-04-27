@@ -1,18 +1,11 @@
 package endpoints
 
 import (
-	"database/sql"
-	"encoding/json"
-	"fmt"
-	"log"
+    "database/sql"
+    "encoding/json"
+    "net/http"
+    "time"	
 	"math/rand"
-	"net/http"
-	"os"
-	"sync"
-	"time"
-
-	"github.com/joho/godotenv"
-	"github.com/meilisearch/meilisearch-go"
 )
 
 type SearchRequest struct {
@@ -32,41 +25,8 @@ type SearchResponse struct {
     SearchID string         `json:"search_id"`
 }
 
-// CacheEntry represents an entry in the cache
-type CacheEntry struct {
-    Results   []SearchResult
-    Timestamp time.Time
-}
-
-var searchCache sync.Map
+var SearchCache map[string][]SearchResult
 const cacheExpiration = 30 * time.Second
-
-// Initialize MeiliSearch client
-var client *meilisearch.Client
-
-func init() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
-	meiliHost := os.Getenv("MEILISEARCH_HOST")
-	meiliKey := os.Getenv("MEILISEARCH_KEY")
-
-	client = meilisearch.NewClient(meilisearch.ClientConfig{
-		Host:   meiliHost,
-		APIKey: meiliKey,
-	})
-
-	client.CreateIndex(&meilisearch.IndexConfig{
-		Uid: "books",
-		PrimaryKey: "bookID",
-	})
-	
-	client.CreateIndex(&meilisearch.IndexConfig{
-		Uid: "movies",
-		PrimaryKey: "Title",
-	})
-}
 
 // SearchHandler function to handle /search endpoint
 func SearchHandler(db *sql.DB) http.HandlerFunc {
@@ -85,11 +45,11 @@ func SearchHandler(db *sql.DB) http.HandlerFunc {
 		}
 
 		// Check if the search query exists in the cache
-		cachedResults, found := searchCache.Load(request.SearchQuery)
-		if found && !isExpired(cachedResults.(CacheEntry).Timestamp) {
+		cachedResults, found := SearchCache[request.SearchQuery]
+		if found && !isExpired(cachedResults[0].Timestamp) {
 			// If search query is found in the cache and it's not expired, return cached results
 			response := SearchResponse{
-				Results:  cachedResults.(CacheEntry).Results,
+				Results:  cachedResults,
 				Cached:   true,
 				SearchID: generateSearchID(),
 			}
@@ -98,15 +58,14 @@ func SearchHandler(db *sql.DB) http.HandlerFunc {
 		}
 
 		// Perform search in the database
-		results, err := performSearch(request.SearchQuery)
+		results, err := performSearch(db, request.SearchQuery)
 		if err != nil {
-			fmt.Println(err)
 			http.Error(w, "Error performing search", http.StatusInternalServerError)
 			return
 		}
 
 		// Cache the search results
-		searchCache.Store(request.SearchQuery, CacheEntry{Results: results, Timestamp: time.Now()})
+		SearchCache[request.SearchQuery] = results
 
 		// Construct response with search results
 		response := SearchResponse{
@@ -131,45 +90,54 @@ func sendResponse(w http.ResponseWriter, response SearchResponse) {
 }
 
 
-// performSearch performs a search using MeiliSearch
-func performSearch(searchQuery string) ([]SearchResult, error) {
-    // Perform search on the "books" index
-    searchRes, err := client.Index("books").Search(searchQuery, &meilisearch.SearchRequest{
-        Limit: 10,
-    })
+// performSearch executes a SQL query to perform the search operation in the database
+func performSearch(db *sql.DB, searchQuery string) ([]SearchResult, error) {
+	// Prepare SQL query to search for books and movies based on the search query
+	query := `
+		SELECT title, ratings_count, "book" AS type
+		FROM books
+		WHERE title LIKE ?
+		UNION ALL
+		SELECT title, rating, "movie" AS type
+		FROM movies
+		WHERE title LIKE ?
+		ORDER BY title
+	`
+
+	// Execute the SQL query with placeholders for search query
+	rows, err := db.Query(query, "%"+searchQuery+"%", "%"+searchQuery+"%")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	// Iterate through the query results and construct search results
+	var results []SearchResult
+	for rows.Next() {
+		var title string
+		var rating float64
+		var itemType string
+		err := rows.Scan(&title, &rating, &itemType)
+		if err != nil {
+            return nil, err
+        }
+
+		result := SearchResult{
+			Title:  title,
+			Rating: rating,
+			Type:   itemType,
+		}
+		results = append(results, result)
+	}
+
+    // Check for any errors during iteration
+    err = rows.Err()
     if err != nil {
         return nil, err
     }
 
-    // Process search response and extract search results
-    var results []SearchResult
-    for _, hit := range searchRes.Hits {
-        // Convert hit to map[string]interface{}
-        hitMap := hit.(map[string]interface{})
-
-        // Retrieve fields from the hit map
-        title, okTitle := hitMap["title"].(string)
-        itemType, okType := hitMap["type"].(string)
-        rating, okRating := hitMap["rating"].(float64)
-
-        // Check if all required fields exist
-        if !okTitle || !okType || !okRating {
-            return nil, fmt.Errorf("missing or invalid fields in search result")
-        }
-
-        // Create SearchResult object
-        result := SearchResult{
-            Title:  title,
-            Type:   itemType,
-            Rating: rating,
-        }
-        results = append(results, result)
-    }
-
-    return results, nil
+	return results, nil
 }
-
-
 
 func generateSearchID() string {
     // Set the seed for the random number generator based on current time

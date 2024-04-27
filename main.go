@@ -21,6 +21,9 @@ func main() {
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
+
+	// Initialize the searchCache map
+    endpoints.SearchCache = make(map[string][]endpoints.SearchResult)
 	
 	// Database connection setup
 	dbUser := os.Getenv("DB_USER")
@@ -40,15 +43,15 @@ func main() {
 		log.Fatalf("Error creating tables: %v", err)
 	}
 
-	// if err := importCSV.ImportDataFromCSV(db, "books.csv", "books"); err != nil {
-	// 	log.Fatalf("Error importing data from books CSV: %v", err)
-	// }
+	if err := importCSV.ImportDataFromCSV(db, "books.csv", "books"); err != nil {
+		log.Fatalf("Error importing data from books CSV: %v", err)
+	}
 
-	// if err := importCSV.ImportDataFromCSV(db, "movies.csv", "movies"); err != nil {
-	// 	log.Fatalf("Error importing data from movies CSV: %v", err)
-	// }
+	if err := importCSV.ImportDataFromCSV(db, "movies.csv", "movies"); err != nil {
+		log.Fatalf("Error importing data from movies CSV: %v", err)
+	}
 
-	// fmt.Println("Data import successful!")
+	fmt.Println("Data import successful!")
 
 	// Define HTTP routes
 	http.HandleFunc("/search", endpoints.SearchHandler(db))
