@@ -50,6 +50,14 @@ Ensure that both MySQL container is running.
   go run main.go
   ```
 
+  
+## Postman Collection
+You can use the provided Postman collection to explore and interact with all the endpoints of the Anghami Search Exercise API.
+
+[Download Postman Collection](https://api.postman.com/collections/15530394-c1ca7f2f-4c7a-4144-85dd-80fa3425e1ed?access_key=)
+
+
+
 ## Usage
 Once the application is running, you can interact with it using the following endpoints:
 - `/search`: Handle search queries.
