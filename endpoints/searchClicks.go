@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"time"
 )
 
 type ClickData struct {
@@ -14,6 +15,7 @@ type ClickData struct {
     ResultType     string `json:"result_type"`
     ResultID       int    `json:"result_id"`
     ResultPosition int    `json:"result_position"`
+	Timestamp   time.Time `json:"timestamp"`
 }
 
 // ReportClickHandler handles the /report-click endpoint
@@ -59,11 +61,14 @@ func insertClickEvent(db *sql.DB, request ClickData) error {
 		}
 	}
 
+	// Get the current time
+	timestamp := time.Now()
+
 	// Prepare SQL query to insert data into search_events table
 	query := `
-		INSERT INTO search_clicks (search_id, result_type, result_id, result_position) VALUES (?, ?, ?, ?)
+		INSERT INTO search_clicks (search_id, result_type, result_id, result_position, timestamp) VALUES (?, ?, ?, ?)
 	`
-	_, err := db.Exec(query, request.SearchID, request.ResultType, request.ResultID, request.ResultPosition)
+	_, err := db.Exec(query, request.SearchID, request.ResultType, request.ResultID, request.ResultPosition, timestamp.Format("2006-01-02 15:04:05"))
 
 	if err != nil {
 		return err

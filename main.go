@@ -3,6 +3,7 @@ package main
 import (
 	"anghami-exercise/endpoints"
 	"anghami-exercise/importCSV"
+	"anghami-exercise/analytics"
 	"database/sql"
 	"fmt"
 	"log"
@@ -20,9 +21,6 @@ func main() {
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
-
-	// Initialize the searchCache map
-    endpoints.SearchCache = make(map[string][]endpoints.SearchResult)
 	
 	// Database connection setup
 	dbUser := os.Getenv("DB_USER")
@@ -42,21 +40,39 @@ func main() {
 		log.Fatalf("Error creating tables: %v", err)
 	}
 
-	if err := importCSV.ImportDataFromCSV(db, "books.csv", "books"); err != nil {
-		log.Fatalf("Error importing data from books CSV: %v", err)
-	}
+	// if err := importCSV.ImportDataFromCSV(db, "books.csv", "books"); err != nil {
+	// 	log.Fatalf("Error importing data from books CSV: %v", err)
+	// }
 
-	if err := importCSV.ImportDataFromCSV(db, "movies.csv", "movies"); err != nil {
-		log.Fatalf("Error importing data from movies CSV: %v", err)
-	}
+	// if err := importCSV.ImportDataFromCSV(db, "movies.csv", "movies"); err != nil {
+	// 	log.Fatalf("Error importing data from movies CSV: %v", err)
+	// }
 
-	fmt.Println("Data import successful!")
+	// fmt.Println("Data import successful!")
 
 	// Define HTTP routes
 	http.HandleFunc("/search", endpoints.SearchHandler(db))
 	http.HandleFunc("/report-search", endpoints.ReportSearchHandler(db))
 	http.HandleFunc("/report-click", endpoints.ReportClickHandler(db))
 
+	// Fetch click data from the last 24 hours
+	clickData, err := analytics.FetchClickData(db)
+	if err != nil {
+		log.Fatal("Error fetching click data:", err)
+	}
+
+	// Generate insights
+	insights := analytics.GenerateInsights(clickData)
+
+	// Save insights to JSON file
+	err = analytics.SaveInsightsToFile(insights)
+	if err != nil {
+		log.Fatal("Error saving insights to file:", err)
+	}
+
+	fmt.Print("Insights generated and saved to file\n")
+
 	// Start HTTP server
-	http.ListenAndServe(":8080", nil)
+	port := os.Getenv("PORT")
+	http.ListenAndServe(":"+port, nil)
 }

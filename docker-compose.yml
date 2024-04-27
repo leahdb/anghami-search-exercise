@@ -14,6 +14,20 @@ services:
       - "3307:3306"
     volumes:
       - mysql_data:/var/lib/mysql
+  
+  meilisearch:
+    image: getmeili/meilisearch:v1.2.0
+    container_name: anghami-exercice-meilisearch
+    restart: unless-stopped
+    ports:
+        - 7700:7700
+    environment:
+        - MEILI_HTTP_ADDR=0.0.0.0:7700
+        - MEILI_MASTER_KEY=leaKVoQ4lr3ZDqBiDNRVlqxHw7y-uaA7nRLKT3s5k6o
+        - MEILI_DB_PATH=/data.ms
+    volumes:
+        - ./meili_data:/data.ms
 
 volumes:
   mysql_data:
+  meilisearch_data:

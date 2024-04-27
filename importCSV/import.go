@@ -49,9 +49,6 @@ func ImportDataFromCSV(db *sql.DB, fileName, tableName string) error {
 	defer file.Close()
 
 	reader := NewCustomCSVReader(file)
-	if err != nil {
-		return fmt.Errorf("error creating custom CSV reader: %v", err)
-	}
 
 	return importData(db, reader, tableName)
 }
@@ -162,7 +159,6 @@ func importData(db *sql.DB, reader *CustomCSVReader, tableName string) error {
     // Read CSV records and insert into database
     for index := 1; index<=3886; index++ {
         record, err := reader.Read()
-		//40146 44439
 
 		// Check if the number of fields matches the number of headers
         if len(record) != len(headers) {
