@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"os"
 	"sort"
 	"time"
@@ -20,6 +21,26 @@ type Insights struct {
 	Date               time.Time `json:"date"`
 }
 
+// GenerateInsightsHandler generates insights from click data
+func GenerateInsightsHandler(db *sql.DB) http.HandlerFunc {
+    return func(w http.ResponseWriter, r *http.Request) {
+        clickData, err := FetchClickData(db)
+        if err != nil {
+            http.Error(w, fmt.Sprintf("Error fetching click data: %v", err), http.StatusInternalServerError)
+            return
+        }
+
+        insights := GenerateInsights(clickData)
+
+        if err := SaveInsightsToFile(insights); err != nil {
+            http.Error(w, fmt.Sprintf("Error saving insights to file: %v", err), http.StatusInternalServerError)
+            return
+        }
+
+        fmt.Fprintln(w, "Insights generated and saved successfully")
+    }
+}
+
 func FetchClickData(db *sql.DB) ([]endpoints.ClickData, error) {
 	// Query to fetch click data from the last 24 hours
 	query := `
@@ -33,8 +54,6 @@ func FetchClickData(db *sql.DB) ([]endpoints.ClickData, error) {
 		return nil, err
 	}
 	defer rows.Close()
-
-	fmt.Println(rows)
 
 	var clickData []endpoints.ClickData
 	for rows.Next() {

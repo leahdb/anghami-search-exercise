@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net/http"
 	"os"
 	"regexp"
 	"strings"
@@ -37,6 +38,28 @@ func (r *CustomCSVReader) Read() ([]string, error) {
     }
 
     return record, nil
+}
+
+// ImportBooksHandler imports data from the books.csv file into the 'books' table
+func ImportBooksHandler(db *sql.DB) http.HandlerFunc {
+    return func(w http.ResponseWriter, r *http.Request) {
+        if err := ImportDataFromCSV(db, "books.csv", "books"); err != nil {
+            http.Error(w, fmt.Sprintf("Error importing data from books CSV: %v", err), http.StatusInternalServerError)
+            return
+        }
+        fmt.Fprintln(w, "Books imported successfully")
+    }
+}
+
+// ImportMoviesHandler imports data from the movies.csv file into the 'movies' table
+func ImportMoviesHandler(db *sql.DB) http.HandlerFunc {
+    return func(w http.ResponseWriter, r *http.Request) {
+        if err := ImportDataFromCSV(db, "movies.csv", "movies"); err != nil {
+            http.Error(w, fmt.Sprintf("Error importing data from movies CSV: %v", err), http.StatusInternalServerError)
+            return
+        }
+        fmt.Fprintln(w, "Movies imported successfully")
+    }
 }
 
 

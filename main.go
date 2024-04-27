@@ -43,37 +43,15 @@ func main() {
 		log.Fatalf("Error creating tables: %v", err)
 	}
 
-	if err := importCSV.ImportDataFromCSV(db, "books.csv", "books"); err != nil {
-		log.Fatalf("Error importing data from books CSV: %v", err)
-	}
-
-	if err := importCSV.ImportDataFromCSV(db, "movies.csv", "movies"); err != nil {
-		log.Fatalf("Error importing data from movies CSV: %v", err)
-	}
-
-	fmt.Println("Data import successful!")
-
 	// Define HTTP routes
 	http.HandleFunc("/search", endpoints.SearchHandler(db))
 	http.HandleFunc("/report-search", endpoints.ReportSearchHandler(db))
 	http.HandleFunc("/report-click", endpoints.ReportClickHandler(db))
 
-	// Fetch click data from the last 24 hours
-	clickData, err := analytics.FetchClickData(db)
-	if err != nil {
-		log.Fatal("Error fetching click data:", err)
-	}
-
-	// Generate insights
-	insights := analytics.GenerateInsights(clickData)
-
-	// Save insights to JSON file
-	err = analytics.SaveInsightsToFile(insights)
-	if err != nil {
-		log.Fatal("Error saving insights to file:", err)
-	}
-
-	fmt.Print("Insights generated and saved to file\n")
+	// Jobs routes
+	http.HandleFunc("/import-books", importCSV.ImportBooksHandler(db))
+	http.HandleFunc("/import-movies", importCSV.ImportMoviesHandler(db))
+	http.HandleFunc("/generate-insights", analytics.GenerateInsightsHandler(db))
 
 	// Start HTTP server
 	port := os.Getenv("PORT")
