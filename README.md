@@ -54,7 +54,7 @@ Ensure that both MySQL container is running.
 ## Postman Collection
 You can use the provided Postman collection to explore and interact with all the endpoints of the Anghami Search Exercise API.
 
-[Download Postman Collection](https://api.postman.com/collections/15530394-c1ca7f2f-4c7a-4144-85dd-80fa3425e1ed?access_key=)
+[Download Postman Collection](https://www.postman.com/leahdb/workspace/anghami-endpoints-collection/collection/15530394-c1ca7f2f-4c7a-4144-85dd-80fa3425e1ed?action=share&creator=15530394)
 
 
 
