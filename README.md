@@ -9,11 +9,18 @@ Before running the project, ensure that you have Docker and Docker Compose insta
 To run the project, follow these steps:
 
 1. **Clone the Repository**:
+   
+```
 git clone https://github.com/leahdb/anghami-search-exercise.git
+```
 
 
 2. **Navigate to the Project Directory**:
+
+```
 cd anghami-search-exercise
+```
+
 
 3. **Copy the Environment File**:
 - Copy the .env.example file and rename it to .env:
