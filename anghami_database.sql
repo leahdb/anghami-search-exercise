@@ -1,22 +1,39 @@
 -- Create 'books' table
 CREATE TABLE IF NOT EXISTS books (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+    bookID VARCHAR(255) PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
-    author VARCHAR(255) NOT NULL,
+    authors VARCHAR(255) NOT NULL,
+    average_rating VARCHAR(255) NULL,
+    isbn VARCHAR(255) NULL,
+    isbn13 VARCHAR(255) NULL,
+    language_code VARCHAR(255) NULL,
+    num_pages VARCHAR(255) NULL,
     ratings_count INT NOT NULL,
-    published_date DATE NOT NULL,
+    text_reviews_count VARCHAR(255) NULL,
+    publication_date VARCHAR(255) NULL,
+    publisher VARCHAR(255) NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+
 -- Create 'movies' table
 CREATE TABLE IF NOT EXISTS movies (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    title VARCHAR(255) NOT NULL,
-    director VARCHAR(255) NOT NULL,
-    rating FLOAT NOT NULL,
-    release_date DATE NOT NULL,
+    movieID INT AUTO_INCREMENT PRIMARY KEY,
+    Title VARCHAR(255) NULL,
+    Year VARCHAR(255) NULL,
+    Summary VARCHAR(255) NULL,
+    Short_Summary VARCHAR(255) NULL,
+    IMDB_ID VARCHAR(255) NULL,
+    Runtime VARCHAR(255) NULL,
+    YouTube_Trailer VARCHAR(255) NULL,
+    Rating VARCHAR(255) NULL,
+    Movie_Poster VARCHAR(255) NULL,
+    Director VARCHAR(255) NULL,
+    Writers VARCHAR(255) NULL,
+    Cast VARCHAR(255) NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
 
 -- Create 'search_events' table
 CREATE TABLE IF NOT EXISTS search_events (

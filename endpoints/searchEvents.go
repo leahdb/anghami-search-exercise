@@ -45,7 +45,7 @@ func ReportSearchHandler(db *sql.DB) http.HandlerFunc {
 		}
 
 		// Send success response
-		w.WriteHeader(http.StatusOK)
+		fmt.Fprintln(w, "Search reported successfully")
 	}
 }
 
@@ -68,7 +68,8 @@ func insertSearchEvent(db *sql.DB, request ReportSearchRequest) error {
 		VALUES (?, ?, ?)
 	`
 	// Execute SQL query
-	_, err := db.Exec(query, request.SearchID, request.SearchQuery, timestamp.Format("2006-01-02 15:04:05"))
+	layout := "2006-01-02 15:04:05"
+	_, err := db.Exec(query, request.SearchID, request.SearchQuery, timestamp.Format(layout))
 	if err != nil {
 		return err
 	}

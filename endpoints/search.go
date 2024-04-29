@@ -3,6 +3,7 @@ package endpoints
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"math/rand"
 	"net/http"
 	"sort"
@@ -15,6 +16,7 @@ type SearchRequest struct {
 }
 
 type SearchResult struct {
+	ID        int       `json:"id"`
     Title     string    `json:"title"`
     Type      string    `json:"type"`
     Rating    float64   `json:"rating"`
@@ -63,6 +65,7 @@ func SearchHandler(db *sql.DB) http.HandlerFunc {
 		// Perform search in the database
 		results, err := performSearch(db, request.SearchQuery)
 		if err != nil {
+			fmt.Println(err)
 			http.Error(w, "Error performing search", http.StatusInternalServerError)
 			return
 		}
@@ -107,11 +110,11 @@ func sendResponse(w http.ResponseWriter, response SearchResponse) {
 func performSearch(db *sql.DB, searchQuery string) ([]SearchResult, error) {
 	// Prepare SQL query to search for books and movies based on the search query
 	query := `
-		SELECT title, ratings_count, "book" AS type
+		SELECT bookID, title, average_rating, "book" AS type
 		FROM books
 		WHERE title LIKE ?
 		UNION ALL
-		SELECT title, rating, "movie" AS type
+		SELECT movieID, title, rating, "movie" AS type
 		FROM movies
 		WHERE title LIKE ?
 	`
@@ -126,15 +129,17 @@ func performSearch(db *sql.DB, searchQuery string) ([]SearchResult, error) {
 	// Iterate through the query results and construct search results
 	var results []SearchResult
 	for rows.Next() {
+		var id int
 		var title string
 		var rating float64
 		var itemType string
-		err := rows.Scan(&title, &rating, &itemType)
+		err := rows.Scan(&id, &title, &rating, &itemType)
 		if err != nil {
             return nil, err
         }
 
 		result := SearchResult{
+			ID:     id,
 			Title:  title,
 			Rating: rating,
 			Type:   itemType,

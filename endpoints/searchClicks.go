@@ -48,12 +48,12 @@ func ReportClickHandler(db *sql.DB) http.HandlerFunc {
 		}
 
 		// Send success response
-		w.WriteHeader(http.StatusOK)
+		fmt.Fprintln(w, "Click reported successfully")
 	}
 }
 
 func insertClickEvent(db *sql.DB, request ClickData) error {
-		// Check if the search_clicks table exists, if not, create it
+	// Check if the search_clicks table exists, if not, create it
 	if !isTableExists(db, "search_clicks") {
 		err := CreateSearchClicksTable(db)
 		if err != nil {
@@ -66,9 +66,10 @@ func insertClickEvent(db *sql.DB, request ClickData) error {
 
 	// Prepare SQL query to insert data into search_events table
 	query := `
-		INSERT INTO search_clicks (search_id, result_type, result_id, result_position, timestamp) VALUES (?, ?, ?, ?)
+		INSERT INTO search_clicks (search_id, result_type, result_id, result_position, timestamp) VALUES (?, ?, ?, ?, ?)
 	`
 	_, err := db.Exec(query, request.SearchID, request.ResultType, request.ResultID, request.ResultPosition, timestamp.Format("2006-01-02 15:04:05"))
+
 
 	if err != nil {
 		return err
